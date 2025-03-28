@@ -15,13 +15,16 @@ import { CartItemModule } from './modules/cart-item/cart-item.module';
 import { OrderModule } from './modules/order/order.module';
 import { OrderItemModule } from './modules/order-item/order-item.module';
 import { LoggerMiddleware } from './middleware/loggerMiddleware';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 console.log(process.env.DB_HOST)
 @Module({
   imports: [
     ConfigModule.forRoot(//config file env
       {
-        isGlobal:true
+        isGlobal: true
       }
     ),
     TypeOrmModule.forRoot({
@@ -34,6 +37,8 @@ console.log(process.env.DB_HOST)
       autoLoadEntities: true,
       synchronize: true,
     }),
+
+
     UsersModule,
     AuthModule,
     CategotyModule,
@@ -44,7 +49,7 @@ console.log(process.env.DB_HOST)
     OrderModule,
     OrderItemModule,
   ],
-  
+
   controllers: [],
   providers: [
     {
@@ -54,7 +59,7 @@ console.log(process.env.DB_HOST)
   ],
 })
 export class AppModule implements NestModule {
-  constructor( private datasource: DataSource){};
+  constructor(private datasource: DataSource) { };
 
   configure(consumer: MiddlewareConsumer) {//config middleware 
     consumer

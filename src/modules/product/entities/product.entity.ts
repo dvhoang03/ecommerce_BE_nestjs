@@ -4,7 +4,7 @@ import { OrderItem } from "src/modules/order-item/entities/orderItem.entity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
-export class Product{
+export class Product {
     @PrimaryGeneratedColumn()
     id: number
 
@@ -17,13 +17,16 @@ export class Product{
     @Column()
     stock: number
 
+    @Column({ type: 'json', nullable: true })
+    images: string[];
+
     @ManyToOne(() => Category, (category) => category.products)
-    @JoinColumn()
+    @JoinColumn({ name: 'categoryId' })
     category: Category;
 
-    @OneToMany( ()=> CartItem, (cartItem) => cartItem.product)
+    @OneToMany(() => CartItem, (cartItem) => cartItem.product)
     cartItems: CartItem[];
-    
-    @OneToMany( () => OrderItem, (orderItem) => orderItem.product )
+
+    @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
     orderItems: OrderItem[]
 }

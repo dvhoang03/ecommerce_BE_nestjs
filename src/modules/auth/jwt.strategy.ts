@@ -12,18 +12,20 @@ export class JwtStrategy extends PassportStrategy(Strategy){
             throw new NotFoundException("not find key-jwt")
         }
         super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),// Lấy token từ header "Authorization: Bearer <token>"
             ignoreExpiration:false,
-            secretOrKey: process.env.JWT_SECRET ,
+            secretOrKey: process.env.JWT_SECRET ,// Phải khớp với secret trong JwtModule
         });
     };
 
 
     async validate(payload: any) {
+        // Payload là dữ liệu được giải mã từ token
+        
         const user = await this.usersService.findBy(payload.email);
         if( !user ){
             throw new UnauthorizedException("email or password is not correct");
         }
-        return user;
+        return { userId: payload.sub, email: payload.email, role: payload.role };
     }
 }
