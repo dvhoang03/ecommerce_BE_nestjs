@@ -7,44 +7,43 @@ import { CategotyModule } from '../categoty/categoty.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { MinioModule } from '../minio/minio.module';
+import { IsHasOrderItemOrCartItemValidator } from 'src/validationAndPipes/validation/IsDeleteProduct';
+import { CartItem } from '../cart-item/entities/cartItem.entity';
+import { OrderItem } from '../order-item/entities/orderItem.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product]),
-    CategotyModule,
-    // config ảnh
-    MulterModule.register({
-      storage: diskStorage({
-        destination: './uploads', // Thư mục lưu file
-        filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname); // Lấy đuôi file (ví dụ: .jpg)
-          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`; // Tạo tên file duy nhất
-          callback(null, filename);
-        },
-      }),
-      fileFilter: (req, file, callback) => {
-        // Chỉ cho phép upload file ảnh
-        // if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
-        //   return callback(new Error('Only image files are allowed!'), false);
-        // }
-        // callback(null, true);
-        const allowedExtensions = ['.jpg', '.jpeg', '.png'];
-        const fileExtension = extname(file.originalname).toLowerCase();
+    TypeOrmModule.forFeature([Product, CartItem, OrderItem]),
 
-        if (!allowedExtensions.includes(fileExtension)) {
-          return callback(new Error('Only image files are allowed!'), false);
-        }
-        callback(null, true);
-      },
-      limits: {
-        fileSize: 5 * 1024 * 1024, // Giới hạn kích thước file (5MB)
-      },
-    }),
+    // config ảnh
+    // MulterModule.register({
+    //   storage: diskStorage({
+    //     destination: './uploads', // Thư mục lưu file
+    //     filename: (req, file, callback) => {
+    //       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    //       const ext = extname(file.originalname);
+    //       const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+    //       callback(null, filename);
+    //     },
+    //   }),
+    //   fileFilter: (req, file, callback) => {
+    //     if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+    //       return callback(new Error('Only image files are allowed!'), false);
+    //     }
+    //     callback(null, true);
+    //   },
+    //   limits: {
+    //     fileSize: 5 * 1024 * 1024, // 5MB
+    //   },
+    // }),
+
+    CategotyModule,
+    MinioModule,
   ],
 
   controllers: [ProductController],
-  providers: [ProductService],
+  providers: [ProductService, IsHasOrderItemOrCartItemValidator],
   exports: [ProductService],
 })
 export class ProductModule { }

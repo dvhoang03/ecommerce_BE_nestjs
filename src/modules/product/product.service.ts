@@ -3,63 +3,86 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
-import { UpdateProductDTO } from './dto/updateproduct.dto';
-import { CreateProductDTO } from './dto/product.dto';
+
+import { CreateProductDTO } from './dto/createProduct.dto';
 import { Category } from '../categoty/entities/category.entity';
 import { CategotyService } from '../categoty/categoty.service';
 import { join } from 'path';
 import * as fs from 'fs';
 import { promisify } from 'util';
+import { MinioService } from '../minio/minio.service';
+import { CartItem } from '../cart-item/entities/cartItem.entity';
+import { OrderItem } from '../order-item/entities/orderItem.entity';
+import { UpdateProductDTO } from './dto/updateProduct.dto';
+import { BaseService } from '../base/base.service';
 
-const unlinkAsync = promisify(fs.unlink);
+
 
 @Injectable()
-export class ProductService {
+export class ProductService extends BaseService<Product> {
     constructor(
         @InjectRepository(Product)
         private readonly productRepository: Repository<Product>,
         private categoryService: CategotyService,
-    ) { }
-
-    async getAll(): Promise<Product[]> {
-        return this.productRepository.find({
-            relations: ['category'],
-        });
+        private minioService: MinioService,
+        @InjectRepository(OrderItem)
+        private readonly orderItemRepository: Repository<OrderItem>,
+        @InjectRepository(CartItem)
+        private readonly cartItemRepository: Repository<CartItem>,
+    ) {
+        super(productRepository);
     }
 
-    async getDetail(id: number): Promise<Product | null> {
-        const pro = await this.productRepository.findOne({
-            where: { id },
-            relations: ['category'],
+    async getFilteredProducts(
+        categoryId?: number,
+        minPrice?: number,
+        maxPrice?: number,
+        search?: string,
+        pageSize?: number,
+        page?: number,
+    ): Promise<Product[]> {
+
+
+        // Truy vấn và trả về kết quả
+        return await this.productRepository.find();
+    }
+
+    async findOne(id: number): Promise<Product> {
+        const product = await this.productRepository.findOne({
+            where: { id }
         });
-        if (!pro) {
+        if (!product) {
             throw new NotFoundException(`Product id = ${id} not found`);
         }
-        return pro;
+        return product;
     }
 
-    async createPorduct(pro: CreateProductDTO, files: Express.Multer.File[]): Promise<Product> {
-        const category = await this.categoryService.getDetail(pro.categoryId);
-        if (!category) {
-            throw new NotFoundException('Category not found');
-        }
+    async create(pro: CreateProductDTO, files: Express.Multer.File[]): Promise<Product> {
+        // Kiểm tra sự tồn tại của danh mục
+        const category = await this.categoryService.findOne(pro.categoryId);
 
+        // Khởi tạo đối tượng sản phẩm mới
         const product = this.productRepository.create({
             category,
             ...pro,
             images: [], // Khởi tạo mảng images rỗng
         });
 
-        // Xử lý file ảnh
+        // Xử lý file ảnh (tải ảnh lên MinIO)
         if (files && files.length > 0) {
-            const imageUrls = files.map((file) => `/uploads/${file.filename}`);
+            const imageUrls: string[] = [];
+            for (const file of files) {
+                // Tải ảnh lên MinIO và lấy URL
+                var imageUrl = await this.minioService.uploadImage(file.originalname, file.buffer);
+                imageUrls.push(imageUrl);
+            }
             product.images = imageUrls;
         }
 
         return await this.productRepository.save(product);
     }
 
-    async updatePorduct(pro: UpdateProductDTO, id: number, files: Express.Multer.File[]): Promise<Product | null> {
+    async update(id: number, pro: UpdateProductDTO, files: Express.Multer.File[]): Promise<Product> {
         const product = await this.productRepository.findOne({ where: { id } });
         if (!product) {
             throw new NotFoundException(`Product id = ${id} not found`);
@@ -70,7 +93,7 @@ export class ProductService {
         if (pro.price) product.price = pro.price;
         if (pro.stock) product.stock = pro.stock;
         if (pro.categoryId) {
-            const category = await this.categoryService.getDetail(pro.categoryId);
+            const category = await this.categoryService.findOne(pro.categoryId);
             if (!category) {
                 throw new NotFoundException('Category not found');
             }
@@ -82,17 +105,21 @@ export class ProductService {
             // Xóa các file ảnh cũ (nếu có)
             if (product.images && product.images.length > 0) {
                 for (const imageUrl of product.images) {
-                    const filePath = join(__dirname, '..', '..', imageUrl);
+                    const fileName = imageUrl.split('/').pop() || '';
                     try {
-                        await unlinkAsync(filePath);
+                        await this.minioService.deleteImage(fileName); // Xóa ảnh khỏi MinIO
                     } catch (err) {
-                        console.error(`Failed to delete file ${filePath}:`, err);
+                        console.error(`Failed to delete file from MinIO:`, err);
                     }
                 }
             }
 
             // Lưu các ảnh mới
-            const imageUrls = files.map((file) => `/uploads/${file.filename}`);
+            const imageUrls: string[] = [];
+            for (const file of files) {
+                const imageUrl = await this.minioService.uploadImage(file.originalname, file.buffer);
+                imageUrls.push(imageUrl); // Thêm URL ảnh vào danh sách
+            }
             product.images = imageUrls;
         }
 
@@ -101,7 +128,7 @@ export class ProductService {
         return product;
     }
 
-    async delete(id: number) {
+    async delete(id: number): Promise<boolean> {
         const product = await this.productRepository.findOne({ where: { id } });
         if (!product) {
             throw new NotFoundException(`Product id = ${id} not found`);
@@ -110,15 +137,53 @@ export class ProductService {
         // Xóa các file ảnh (nếu có)
         if (product.images && product.images.length > 0) {
             for (const imageUrl of product.images) {
-                const filePath = join(__dirname, '..', '..', imageUrl);
+                const fileName = imageUrl.split('/').pop() || '';
                 try {
-                    await unlinkAsync(filePath);
+                    await this.minioService.deleteImage(fileName); // Xóa ảnh khỏi MinIO
                 } catch (err) {
-                    console.error(`Failed to delete file ${filePath}:`, err);
+                    console.error(`Failed to delete file from MinIO:`, err);
                 }
             }
         }
 
-        return await this.productRepository.delete(id);
+        const deleteProduct = await this.productRepository.delete(id);
+        return deleteProduct.affected === 1 ? true : false;
+    }
+
+    async hasOrderOrCartItem(productId: number): Promise<boolean> {
+        const product = await this.productRepository.findOne({ where: { id: productId } });
+        if (!product) {
+            throw new NotFoundException("khong tim thay product")
+        }
+        const { id, name, price, stock } = product
+        const cartItem = await this.cartItemRepository.findOne({
+            where: {
+                product:
+                {
+                    id: id,
+                    name: name,
+                    price: price,
+                    stock: stock,
+                }
+            },
+            relations: ['product']
+        })
+        const orderItem = await this.orderItemRepository.findOne({
+            where: {
+                product:
+                {
+                    id: id,
+                    name: name,
+                    price: price,
+                    stock: stock,
+                }
+            },
+        })
+        return (cartItem || orderItem) ? true : false;
+    }
+
+    async IsValidProductQuantity(productId: number, valueQuantity: number): Promise<boolean> {
+        const product = await this.findOne(productId);
+        return ((product.stock) - valueQuantity >= 0) ? true : false;
     }
 }

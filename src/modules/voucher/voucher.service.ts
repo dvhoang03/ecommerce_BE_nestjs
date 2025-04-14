@@ -5,50 +5,71 @@ import { Repository } from 'typeorm';
 import { VoucherDTO } from './dto/voucher.dto';
 import { Order } from '../order/entities/order.entiy';
 import { OrderItemService } from '../order-item/order-item.service';
+import * as moment from 'moment'
+import { BaseService } from '../base/base.service';
 
 @Injectable()
-export class VoucherService {
+export class VoucherService extends BaseService<Voucher> {
     constructor(
         @InjectRepository(Voucher) private voucherRepository: Repository<Voucher>,
         @InjectRepository(Order) private orderRepository: Repository<Order>,
-    ) { };
+    ) {
+        super(voucherRepository);
+    };
 
-    async getAll(): Promise<Voucher[]> {
-        return this.voucherRepository.find();
-    }
 
-    async getDetail(id: number): Promise<Voucher> {
-        const voucher = await this.voucherRepository.findOne({ where: { id } });
-        if (!voucher) {
-            throw new NotFoundException(" not found voucher by id");
+    async findOne(id: number): Promise<Voucher> {
+        const entity = await this.voucherRepository.findOneBy({ id }); // Sử dụng 'as any' tạm thời để tránh lỗi kiểu
+        if (!entity) {
+            throw new NotFoundException(`Không tìm thấy  voucher với ID ${id}`);
         }
-        return voucher;
+        return entity;
     }
 
-    async createVoucher(vou: VoucherDTO): Promise<Voucher> {
-        const voucher = this.voucherRepository.create(vou);
-        return this.voucherRepository.save(voucher);
-    }
-
-    async checkVoucher(code: string): Promise<Voucher> {
+    //tim voucher bang code
+    async findVoucherByCode(code: string): Promise<Voucher> {
         const voucher = await this.voucherRepository.findOne({ where: { code } });
         if (!voucher) {
-            throw new NotFoundException("code of voucher invalid")
-        }
-        if (voucher.stock < 1 || voucher.expiryDate < new Date()) {
-            throw new BadRequestException("Invalid or Expired voucher")
+            throw new NotFoundException(" not found voucher by code");
         }
         return voucher;
     }
 
-
-    async deleteVoucher(id: number) {
-        const voucher = await this.getDetail(id);
-        const orders = await this.orderRepository.find({ where: { voucher: voucher } });
-        if (orders) {
-            throw new BadRequestException(`cannot delete voucher because it is used`)
+    // check vocher xem có càn hạn không và số lượng còn không
+    async checkVoucher(code: string): Promise<boolean> {
+        const voucher = await this.voucherRepository.findOne({ where: { code } });
+        if (!voucher) {
+            return false;
         }
-        return this.voucherRepository.delete(id);
+        const currentDate = moment();
+        const expiryDate = moment(voucher.expiryDate)
+        if (voucher.stock < 1 || currentDate.isAfter(expiryDate)) {
+            return false
+        }
+        return true;
     }
 
+    // check xem code của voucher có bị trùng không
+    async IsCodeUnique(code: string): Promise<boolean> {
+        const voucher = await this.voucherRepository.findOne({
+            where: {
+                code
+            }
+        })
+        return voucher ? true : false;
+    }
+
+    //check  xem voucher có order khong
+    async hasOrders(voucherId: number): Promise<boolean> {
+        const voucher = await this.findOne(voucherId);
+        const orders = await this.orderRepository.findOne({ where: { voucher: voucher } });
+        return orders ? true : false;
+    }
+
+    //giam so lượng voucher khi ap mã coupon
+    async subtractVoucher(id: number, quantity: number): Promise<void> {
+        const voucher = await this.voucherRepository.findOne({ where: { id } })
+        if (!voucher) throw new NotFoundException('khong tim thay voucher')
+        await this.voucherRepository.update(id, { stock: voucher?.stock - quantity })
+    }
 }

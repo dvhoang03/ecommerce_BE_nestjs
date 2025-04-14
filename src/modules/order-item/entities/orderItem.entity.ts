@@ -11,7 +11,7 @@ export class OrderItem {
     quantity: number
 
     @Column()
-    price: number
+    totalPrice: number
 
     @ManyToOne(() => Product, (product) => product.orderItems)
     @JoinColumn({ name: 'productId' })

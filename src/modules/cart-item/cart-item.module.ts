@@ -6,6 +6,7 @@ import { CartItem } from './entities/cartItem.entity';
 import { UsersModule } from '../users/users.module';
 import { CartModule } from '../cart/cart.module';
 import { ProductModule } from '../product/product.module';
+import { IsValidQuantityValidator } from 'src/validationAndPipes/validation/isValidQuantity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([CartItem]),
@@ -13,7 +14,7 @@ import { ProductModule } from '../product/product.module';
     ProductModule,
   ],
   controllers: [CartItemController],
-  providers: [CartItemService],
+  providers: [CartItemService, IsValidQuantityValidator],
   exports: [CartItemService],
 })
 export class CartItemModule { }

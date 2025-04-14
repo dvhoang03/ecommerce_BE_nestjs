@@ -2,55 +2,35 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CategoryDTO } from './dto/category.dto';
+import { CreateCategoryDTO } from './dto/category.dto';
 import { Product } from '../product/entities/product.entity';
+import { ClsService } from 'nestjs-cls';
+import { BaseService } from '../base/base.service';
 
 @Injectable()
-export class CategotyService {
+export class CategotyService extends BaseService<Category> {
 
 
     constructor(
         @InjectRepository(Category)
         private readonly categoryRepository: Repository<Category>,
         @InjectRepository(Product)
-        private readonly productRepository: Repository<Product>
-    ) { };
+        private readonly productRepository: Repository<Product>,
+    ) {
+        super(categoryRepository);
+    };
 
-
-    async getAll(): Promise<Category[]> {
-        return await this.categoryRepository.find();
-    }
-
-
-    async getDetail(id: number): Promise<Category> {
-        const cate = await this.categoryRepository.findOne({
-            where: { id },
-        });
-        if (!cate) throw new NotFoundException(`not find category vs id = ${id}`);
-        return cate;
-    }
-
-    async createCategory(catogory: CategoryDTO): Promise<Category> {
-        const cate = this.categoryRepository.create(catogory);
-        return await this.categoryRepository.save(cate);
-    }
-
-    async updateCategory(category: CategoryDTO, id: number) {
-        const cate = await this.categoryRepository.findOne({ where: { id } });
-        if (!cate) {
-            throw new NotFoundException(`not find category by ${id}`);
+    async findOne(id: number): Promise<Category> {
+        const entity = await this.repository.findOneBy({ id } as any); // Sử dụng 'as any' tạm thời để tránh lỗi kiểu
+        if (!entity) {
+            throw new NotFoundException(`Không tìm thấy catofory với ID ${id}`);
         }
-        await this.categoryRepository.update(id, category);
-        return await this.categoryRepository.findOne({ where: { id } });
+        return entity;
     }
 
-    async deleteCategory(id: number): Promise<any> {
-        const cate = await this.getDetail(id);
-        const product = await this.productRepository.find({ where: { category: cate } })
-        if (product) {
-            throw new BadRequestException('mustnot delete category because have product relative')
-        }
-        return this.categoryRepository.delete(id)
-            ;
+    async hasProducts(categoryId: number): Promise<boolean> {
+        const category = await this.findOne(categoryId);
+        const products = await this.productRepository.findOne({ where: { category } })
+        return products ? true : false;
     }
 }

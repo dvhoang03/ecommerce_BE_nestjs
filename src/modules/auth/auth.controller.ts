@@ -13,38 +13,22 @@ export class AuthController {
 
     @Public()
     @ApiOperation({ summary: 'login sytem' })
-    @ApiConsumes('application/json')
-    @ApiBody({
-        description: 'login system',
-        type: LoginDTO,
-    })
     @UsePipes(new ValidationPipe({ transform: true }))
     @Post('login')
-    async login(@Body() user: LoginDTO) {
+    async login(@Body() request: LoginDTO) {
 
-        const u = await this.authService.validateUser(user.email, user.password);
-        if (!u) {
+        const user = await this.authService.validateUser(request.email, request.password);
+        if (!user) {
             throw new UnauthorizedException("email or password is wrong")
         }
-        return this.authService.login(u);
+        return this.authService.login(user);
     }
 
     @Public()
     @ApiOperation({ summary: 'register a  new user' })
-    @ApiResponse({ status: 201, description: 'Đăng nhập thành công và trả về JWT token' })
-    @ApiResponse({ status: 400, description: 'Bad request' })
     @Post('register')
     async register(@Body() user: CreateUserDto) {
         return this.authService.register(user);
     }
 
-    @Get('hello')
-    @ApiBearerAuth('access-token')
-    @ApiOperation({ summary: " hello the world" })
-    @ApiResponse({ status: 200, description: "Successfully! " })
-
-    hello(@Req() body) {
-        console.log(body)
-        return JSON.stringify(body.user);
-    }
 }

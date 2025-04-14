@@ -18,8 +18,16 @@ import { LoggerMiddleware } from './middleware/loggerMiddleware';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { MinioService } from './modules/minio/minio.service';
+import { MinioModule } from './modules/minio/minio.module';
+import { ClsModule } from 'nestjs-cls';
+import { BaseController } from './modules/base/base.controller';
+import { BaseService } from './modules/base/base.service';
+import { BaseModule } from './modules/base/base.module';
 
-console.log(process.env.DB_HOST)
+import * as moment from 'moment'
+
+
 @Module({
   imports: [
     ConfigModule.forRoot(//config file env
@@ -29,7 +37,8 @@ console.log(process.env.DB_HOST)
     ),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DB_HOST,
+      host: process.env.DB_HOST || 'localhost',
+      // host: 'mysql',
       port: Number(process.env.DB_PORT),
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
@@ -37,6 +46,22 @@ console.log(process.env.DB_HOST)
       autoLoadEntities: true,
       synchronize: true,
     }),
+
+    //config cls 
+    ClsModule.forRoot({
+      middleware: {
+        // tu dong gan middleware cho moi tuyen duowng
+        mount: true,
+        // su dung phuong thuc setup de cung cap gia tri mac dinhj cho store
+        setup: (cls, req) => {
+          // console.log('Header x-user-id:', req);
+          // console.log('Header x-user-id:', req.headers);
+          cls.set('userId', req.headers.authorization);
+        }
+      }
+    }
+    ),
+
 
 
     UsersModule,
@@ -48,6 +73,8 @@ console.log(process.env.DB_HOST)
     CartItemModule,
     OrderModule,
     OrderItemModule,
+    MinioModule,
+    BaseModule,
   ],
 
   controllers: [],
@@ -55,7 +82,8 @@ console.log(process.env.DB_HOST)
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
-    }
+    },
+    MinioService,
   ],
 })
 export class AppModule implements NestModule {

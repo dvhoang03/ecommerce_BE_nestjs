@@ -14,13 +14,14 @@ export class IsVoucherCodeConstraint implements ValidatorConstraintInterface {
     }
 
     defaultMessage(args: ValidationArguments) {
-        return `Voucher code ($value) must start with "voucher-" followed by 4 digits (e.g., voucher-1234)`;
+        return `Mã voucher (${args.value}) phải bắt đầu bằng "voucher-" theo sau là 4 chữ số (ví dụ: voucher-1234)`;
     }
 }
 
 export function IsVoucherCode(validationOptions?: ValidationOptions) {
-    return function (object: Object, propertyName: string) {
+    return function (object: any, propertyName: string) {
         registerDecorator({
+            name: 'IsVoucherCode',
             target: object.constructor,
             propertyName,
             options: validationOptions,

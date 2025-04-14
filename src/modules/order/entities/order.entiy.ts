@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { onErrorResumeNext } from "rxjs";
 import { OrderItem } from "src/modules/order-item/entities/orderItem.entity";
 import { User } from "src/modules/users/entities/user.entity";
@@ -26,3 +27,4 @@ export class Order {
     @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
     orderItems: OrderItem[]
 }
+

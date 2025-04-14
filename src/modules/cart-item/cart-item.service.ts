@@ -7,15 +7,18 @@ import { UsersService } from '../users/users.service';
 import { CartService } from '../cart/cart.service';
 import { CreateCartItemDTO, UpdateCartItemDTO } from './dto/cartItem.dto';
 import { ProductService } from '../product/product.service';
+import { BaseService } from '../base/base.service';
 
 @Injectable()
-export class CartItemService {
+export class CartItemService extends BaseService<CartItem> {
     constructor(
         @InjectRepository(CartItem)
         private cartItemRepository: Repository<CartItem>,
         private cartService: CartService,
         private productService: ProductService,
-    ) { }
+    ) {
+        super(cartItemRepository)
+    }
 
     //lay tat car cartitem
     async getAll(userId: number): Promise<CartItem[]> {
@@ -29,68 +32,76 @@ export class CartItemService {
         })
     }
 
-    async getDetail(id: number): Promise<CartItem> {
-        const cartItem = await this.cartItemRepository.findOne({
-            where: { id }
-        })
-        if (!cartItem) {
-            throw new NotFoundException("not found cartItem")
-        }
-        return cartItem
-    }
 
+    //tao cartItem 
+    async create(cartItemDTO: CreateCartItemDTO, userId: number): Promise<CartItem> {
 
-    //tao cartItem neu quantity > product.stock thi huy
-    async createCartItem(userId: number, cartItemDTO: CreateCartItemDTO): Promise<CartItem> {
-        var cart = await this.cartService.findbyUserId(userId);
+        let { productId, quantity } = cartItemDTO;
+        // Lấy giỏ hàng của người dùng
+        let cart = await this.cartService.findbyUserId(userId);
+        // Nếu chưa có giỏ hàng, tạo mới
         if (!cart) {
             cart = await this.cartService.createCart(userId);
         }
-        let { quantity, productId } = cartItemDTO;
-        const product = await this.productService.getDetail(productId);
-        if (!product) {
-            throw new NotFoundException("not found product of cartitem")
-        }
-        const cartitem = await this.cartItemRepository.findOne({
-            where: { cart, product }
+        // Lấy chi tiết sản phẩm
+        const product = await this.productService.findOne(productId);
+
+        console.log(cart, product)
+        // tim cartItem của user cho product
+        const cartItem = await this.cartItemRepository.findOne({
+            where: {
+                product: {
+                    id: product.id
+                },
+                cart: {
+                    id: cart.id
+                }
+            }
         })
-        if (cartitem) {
-            quantity = quantity + cartitem.quantity
+
+        //Nếu đã có, cộng thêm số lượng vào cartItem hiện tại
+        if (cartItem) {
+            const updateQuantity = quantity + cartItem.quantity;
+            await this.cartItemRepository.update(cartItem.id, { quantity: updateQuantity })
+            return await this.findOne(cartItem.id);
         }
-        if (quantity > product.stock) {
-            throw new BadRequestException("quantity of product or enought")
-        }
-        const cartItem = await this.cartItemRepository.create({
+
+        // Nếu cartItem chưa tồn tại, tạo một cartItem mới
+        const newCartItem = this.cartItemRepository.create({
             quantity,
             product,
-            cart
-        })
-        return this.cartItemRepository.save(cartItem)
+            cart,
+        });
+        return this.cartItemRepository.save(newCartItem);
+
     }
 
-    async updateCartItem(userId: number, id: number, updateCartItemDTO: UpdateCartItemDTO): Promise<any> {
 
+    async updateCartItem(userId: number, id: number, updateCartItemDTO: UpdateCartItemDTO): Promise<CartItem> {
         const { quantity } = updateCartItemDTO;
-        var cartitem = await this.cartItemRepository.findOne({ where: { id } });
+        var cartitem = await this.cartItemRepository.findOne({
+            where: { id },
+            relations: ['product', 'cart']
+        });
         if (!cartitem) {
             throw (" ko tim thay cartItem");
         }
-
-        if (quantity > cartitem.product.stock) {
-            throw new BadRequestException("quantity over quantity of product")
-        }
-        return await this.cartItemRepository.update(id, {
+        await this.cartItemRepository.update(id, {
             quantity
         })
+        return await this.findOne(id);
     }
 
-    async deleteCartItem(id: number): Promise<any> {
+    async findCartItemByProduct(productId): Promise<CartItem | null> {
+        const cartItem = await this.cartItemRepository.findOne({
+            where: {
+                product: {
+                    id: productId
+                }
+            }
+        })
 
-        var cartitem = await this.cartItemRepository.findOne({ where: { id } });
-        if (!cartitem) {
-            throw (" ko tim thay cartItem");
-        }
-
-        return await this.cartItemRepository.delete(id);
+        return cartItem;
     }
+
 }

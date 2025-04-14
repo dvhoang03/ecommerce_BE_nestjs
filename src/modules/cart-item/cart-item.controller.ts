@@ -18,17 +18,18 @@ export class CartItemController {
   }
 
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'add cartItem in cart' })
+  @ApiOperation({ summary: 'tạo cartItem, nếu có thì cập nhật, lôi nếu số lượng cartItem lớn hơn số lượng product còn lại ' })
   @Post()
-  addCartItem(@GetUser() user, @Body() cartitem: CreateCartItemDTO): Promise<CartItem> {
-    return this.cartItemService.createCartItem(user.id, cartitem);
+  addCartItem(@GetUser() user, @Body() createCartitem: CreateCartItemDTO): Promise<CartItem> {
+    return this.cartItemService.create(createCartitem, user.id);
   }
 
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'update cartItem ' })
+  @ApiOperation({ summary: 'update cartItem, lôi nếu số lượng cartItem lớn hơn số lượng product còn lại ' })
   @ApiParam({ name: 'id', description: 'id of cartItem', example: 1 })
   @Patch(':id')
   updateCartItem(@GetUser() user, @Param('id', ParseIntPipe) id: number, @Body() cartItem: UpdateCartItemDTO): Promise<CartItem> {
+    cartItem.productId = id;
     return this.cartItemService.updateCartItem(user.id, id, cartItem);
   }
 
@@ -37,7 +38,7 @@ export class CartItemController {
   @ApiParam({ name: 'id', description: 'id of cartItem', example: 1 })
   @Delete(':id')
   deleteCartItem(@Param('id', ParseIntPipe) id: number) {
-    return this.cartItemService.deleteCartItem(id);
+    return this.cartItemService.delete(id);
   }
 
 

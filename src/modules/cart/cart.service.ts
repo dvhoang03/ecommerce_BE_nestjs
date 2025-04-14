@@ -20,20 +20,20 @@ export class CartService {
         });
     }
 
-    //create cart
+    //tạo cart với id người dùng
     async createCart(userId: number) {
 
         const user = await this.userRepository.findOne({ where: { id: userId } });
         if (!user) {
-            throw new NotFoundException('not foundUser')
+            throw new NotFoundException('khong tim thay user')
         }
         const cart = await this.cartRepository.create({ user });
-
         return await this.cartRepository.save(cart);
+
     }
 
     // find cart by userId
-    async findbyUserId(userId: number): Promise<Cart> {
+    async findbyUserId(userId: number): Promise<Cart | null> {
         const user = await this.userRepository.findOne({ where: { id: userId } });
         if (!user) {
             throw new NotFoundException('not found user')
@@ -43,9 +43,6 @@ export class CartService {
                 user: user
             }
         })
-        if (!cart) {
-            throw new NotFoundException("not found cart by this user")
-        }
         return cart;
     }
 

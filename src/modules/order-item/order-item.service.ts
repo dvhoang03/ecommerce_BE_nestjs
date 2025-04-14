@@ -12,17 +12,17 @@ export class OrderItemService {
         @InjectRepository(OrderItem) private orderItemRepository: Repository<OrderItem>
     ) { }
 
-    async createOrderItem(orderItem: OrderItemDTO, price: number, product: Product, order: Order): Promise<OrderItem> {
+    async createOrderItem(orderItem: OrderItemDTO, totalPrice: number, product: Product, order: Order): Promise<OrderItem> {
         const oi = await this.orderItemRepository.create({
             product,
             order,
-            price,
+            totalPrice,
             ...orderItem
         })
         return await this.orderItemRepository.save(oi);
     }
 
     async deleteOrderItemByOrder(order: Order) {
-        return this.orderItemRepository.delete(order);
+        return this.orderItemRepository.delete({ order });
     }
 }
