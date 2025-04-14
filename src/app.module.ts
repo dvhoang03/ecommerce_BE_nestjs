@@ -21,11 +21,11 @@ import { extname } from 'path';
 import { MinioService } from './modules/minio/minio.service';
 import { MinioModule } from './modules/minio/minio.module';
 import { ClsModule } from 'nestjs-cls';
-import { BaseController } from './modules/base/base.controller';
-import { BaseService } from './modules/base/base.service';
 import { BaseModule } from './modules/base/base.module';
-
 import * as moment from 'moment'
+import { CacheModule } from '@nestjs/cache-manager';
+import { hostname } from 'os';
+import { redisStore } from 'cache-manager-redis-store';
 
 
 @Module({
@@ -35,6 +35,7 @@ import * as moment from 'moment'
         isGlobal: true
       }
     ),
+
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST || 'localhost',
@@ -45,6 +46,18 @@ import * as moment from 'moment'
       database: process.env.DB_DATABASE,
       autoLoadEntities: true,
       synchronize: true,
+    }),
+
+    // config redis
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => ({
+        store: await redisStore({
+          host: process.env.REDIS_HOST || 'localhost',
+          port: process.env.REDIS_PORT || 6379,
+          ttl: process.env.REDIS_TTL || 5000, // Thời gian sống của cache (giây)
+        }),
+      }),
     }),
 
     //config cls 
@@ -61,8 +74,6 @@ import * as moment from 'moment'
       }
     }
     ),
-
-
 
     UsersModule,
     AuthModule,

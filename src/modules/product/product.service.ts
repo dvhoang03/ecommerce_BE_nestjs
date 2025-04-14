@@ -1,5 +1,5 @@
 // src/modules/product/product.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
@@ -15,45 +15,95 @@ import { CartItem } from '../cart-item/entities/cartItem.entity';
 import { OrderItem } from '../order-item/entities/orderItem.entity';
 import { UpdateProductDTO } from './dto/updateProduct.dto';
 import { BaseService } from '../base/base.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 
 
 @Injectable()
 export class ProductService extends BaseService<Product> {
+
+    private readonly logger = new Logger(ProductService.name);
+
     constructor(
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
         @InjectRepository(Product)
         private readonly productRepository: Repository<Product>,
-        private categoryService: CategotyService,
-        private minioService: MinioService,
         @InjectRepository(OrderItem)
         private readonly orderItemRepository: Repository<OrderItem>,
         @InjectRepository(CartItem)
         private readonly cartItemRepository: Repository<CartItem>,
+        private categoryService: CategotyService,
+        private minioService: MinioService,
     ) {
         super(productRepository);
     }
+
 
     async getFilteredProducts(
         categoryId?: number,
         minPrice?: number,
         maxPrice?: number,
         search?: string,
-        pageSize?: number,
-        page?: number,
+        page: number = 1,
+        pageSize: number = 10,
+
     ): Promise<Product[]> {
 
+        const cacheKey = `products:${categoryId ?? ''}:${minPrice ?? ''}:${maxPrice ?? ''}:${search ?? ''}:${page}:${pageSize}`;
+        const cacheProduct = await this.cacheManager.get<Product[]>(cacheKey);
 
-        // Truy vấn và trả về kết quả
-        return await this.productRepository.find();
+        if (cacheProduct) {
+            this.logger.log('Returning cached products');
+            return cacheProduct;
+        }
+
+        const queryBuilder = this.productRepository.createQueryBuilder('product');
+
+        if (categoryId) {
+            queryBuilder.andWhere('product.categoryId = :categoryId', { categoryId });
+        }
+
+        if (minPrice) {
+            queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
+        }
+
+        if (maxPrice) {
+            queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice });
+        }
+
+        if (search) {
+            queryBuilder.andWhere('product.name LIKE :search', { search: `%${search}%` });
+        }
+
+        // Pagination
+        queryBuilder.skip((page - 1) * pageSize).take(pageSize);
+
+        const products = await queryBuilder.getMany();
+        // Lưu vào cache Redis
+        await this.cacheManager.set(cacheKey, products, 10000);
+
+        this.logger.log('Returning fresh products and caching them');
+        return products;
+
     }
 
+
     async findOne(id: number): Promise<Product> {
+
+        const valueKey = `productId:${id}`;
+        const cacheProduct = await this.cacheManager.get<Product>(valueKey);
+        if (cacheProduct) {
+            this.logger.log('Returning cached product');
+            return cacheProduct;
+        }
         const product = await this.productRepository.findOne({
             where: { id }
         });
         if (!product) {
             throw new NotFoundException(`Product id = ${id} not found`);
         }
+        await this.cacheManager.set(valueKey, product);
         return product;
     }
 
@@ -78,6 +128,8 @@ export class ProductService extends BaseService<Product> {
             }
             product.images = imageUrls;
         }
+
+        await this.cacheManager.del('products:*');
 
         return await this.productRepository.save(product);
     }
@@ -125,6 +177,7 @@ export class ProductService extends BaseService<Product> {
 
         // Lưu sản phẩm đã cập nhật
         await this.productRepository.save(product);
+        await this.cacheManager.del('products:*');
         return product;
     }
 
@@ -147,6 +200,9 @@ export class ProductService extends BaseService<Product> {
         }
 
         const deleteProduct = await this.productRepository.delete(id);
+        await this.cacheManager.del(`products:${id}`);
+        const valueKey = `productId:${id}`;
+        await this.cacheManager.del(valueKey);
         return deleteProduct.affected === 1 ? true : false;
     }
 

@@ -32,7 +32,14 @@ export class ProductController {
     @Query('pageSize') pageSize: number = 10,
 
   ): Promise<Product[]> {
-    return this.productService.getFilteredProducts(categoryId, minPrice, maxPrice, search, page, pageSize);
+    return this.productService.getFilteredProducts(
+      categoryId,
+      minPrice,
+      maxPrice,
+      search,
+      page,
+      pageSize
+    );
   }
 
   // find product 

@@ -12,7 +12,10 @@ export abstract class BaseService<T extends ObjectLiteral> {
 
     // tim ban ghi theo id
     async findOne(id: number): Promise<T> {
-        const entity = await this.repository.findOneBy({ id } as any); // Sử dụng 'as any' tạm thời để tránh lỗi kiểu
+        const entity = await this.repository.findOne({
+            where: { id } as any,
+        }
+        ); // Sử dụng 'as any' tạm thời để tránh lỗi kiểu
         if (!entity) {
             throw new NotFoundException(`Không tìm thấy thực thể với ID ${id}`);
         }

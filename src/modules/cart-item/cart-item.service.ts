@@ -20,6 +20,8 @@ export class CartItemService extends BaseService<CartItem> {
         super(cartItemRepository)
     }
 
+
+
     //lay tat car cartitem
     async getAll(userId: number): Promise<CartItem[]> {
         const cart = await this.cartService.findbyUserId(userId);
@@ -30,6 +32,18 @@ export class CartItemService extends BaseService<CartItem> {
             where: { cart },
             relations: ['product']
         })
+    }
+
+    async findOne(id: number): Promise<CartItem> {
+        const entity = await this.repository.findOne({
+            where: { id },
+            relations: ['product']
+        }
+        ); // Sử dụng 'as any' tạm thời để tránh lỗi kiểu
+        if (!entity) {
+            throw new NotFoundException(`Không tìm thấy cartitem với ID ${id}`);
+        }
+        return entity;
     }
 
 
