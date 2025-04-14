@@ -9,11 +9,16 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_TTL=5000
     ports:
       - '3000:3000'
     depends_on:
       - mysql
       - minio
+      - redis
     volumes:
       - .:/app
       - /app/node_modules # tránh ghi đè node_modules trong container
@@ -46,6 +51,17 @@ services:
     volumes:
       - minio_data:/data
 
+  redis:
+    image: redis/redis-stack-server:latest
+    # Sử dụng image Redis mới nhất
+    container_name: redis
+    restart: unless-stopped # Redis sẽ tự động khởi động lại trừ khi dừng thủ công
+    ports:
+      - '6379:6379' # Ánh xạ cổng Redis vào máy chủ
+    volumes:
+      - redis_data:/data # Sử dụng volume để lưu trữ dữ liệu Redis
+
 volumes:
   mysql_data:
   minio_data:
+  redis_data:

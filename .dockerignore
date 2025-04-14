@@ -1,19 +1,13 @@
-# Versioning and metadata
-.git
-.gitignore
+# Các thư mục không cần thiết
+node_modules
+dist
+logs
+npm-debug.log
+Dockerfile
 .dockerignore
 
-# Build dependencies
-dist
-node_modules
-coverage
-
-# Environment (contains sensitive data)
+# Các tệp và thư mục khác mà bạn không muốn bao gồm trong Docker image
+*.md
+.git
+.gitignore
 .env
-
-# Files not required for production
-.editorconfig
-Dockerfile
-README.md
-.eslintrc.js
-nodemon.json

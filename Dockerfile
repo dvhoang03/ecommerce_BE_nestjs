@@ -1,5 +1,5 @@
 # Sử dụng Node.js image làm base
-FROM node:23-alpine
+FROM node:20.19-alpine
 
 # Tạo thư mục /app trong container
 WORKDIR /app

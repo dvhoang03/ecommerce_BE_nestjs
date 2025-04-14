@@ -51,12 +51,12 @@ import { redisStore } from 'cache-manager-redis-store';
     // config redis
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
-        store: await redisStore({
-          host: process.env.REDIS_HOST || 'localhost',
-          port: process.env.REDIS_PORT || 6379,
-          ttl: process.env.REDIS_TTL || 5000, // Thời gian sống của cache (giây)
-        }),
+      useFactory: async (c) => ({
+        store: redisStore,
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+        ttl: Number(process.env.REDIS_PORT) || 10000,
+        // max: configService.get('MAX_ITEM_IN_CACHE')
       }),
     }),
 
