@@ -19,10 +19,17 @@ services:
       - mysql
       - minio
       - redis
+      - kafka
     volumes:
       - .:/app
       - /app/node_modules # tránh ghi đè node_modules trong container
 
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:latest
+  #   environment:
+  #   ZOOKEEPER_CLIENT_PORT: 2181
+  #   ports:
+  #     - 2181:2181
   mysql:
     image: mysql:8.0
     container_name: mysql
@@ -60,6 +67,41 @@ services:
       - '6379:6379' # Ánh xạ cổng Redis vào máy chủ
     volumes:
       - redis_data:/data # Sử dụng volume để lưu trữ dữ liệu Redis
+
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:latest
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #   ports:
+  #     - 2181:2181
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper1
+    ports:
+      - "2181:2181"
+    restart: unless-stopped
+
+  # kafka:
+  #   image: confluentinc/cp-kafka:latest
+  #   depends_on:
+  #     - zookeeper
+  #   environment:
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+  #   ports:
+  #     - 9092:9092
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka1
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
 
 volumes:
   mysql_data:

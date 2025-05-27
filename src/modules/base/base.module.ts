@@ -4,7 +4,6 @@ import { BaseController } from './base.controller';
 import { BaseService } from './base.service';
 
 @Module({
-    imports: [TypeOrmModule],
-
+  imports: [TypeOrmModule],
 })
-export class BaseModule { }
+export class BaseModule {}

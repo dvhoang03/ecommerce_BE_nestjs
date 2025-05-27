@@ -8,7 +8,10 @@ import { Order } from '../order/entities/order.entiy';
 import { ClsModule } from 'nestjs-cls';
 import { IsEmailUniqueValidator } from 'src/validationAndPipes/validation/isEmailUnique';
 import { Cart } from '../cart/entities/cart.entity';
-import { IsDeleteUserValidator, IsHasOrdersOrCart } from 'src/validationAndPipes/validation/isDeleteUser';
+import {
+  IsDeleteUserValidator,
+  IsHasOrdersOrCart,
+} from 'src/validationAndPipes/validation/isDeleteUser';
 
 @Module({
   imports: [
@@ -20,4 +23,4 @@ import { IsDeleteUserValidator, IsHasOrdersOrCart } from 'src/validationAndPipes
   providers: [UsersService, IsEmailUniqueValidator, IsDeleteUserValidator],
   exports: [UsersService],
 })
-export class UsersModule { }
+export class UsersModule {}

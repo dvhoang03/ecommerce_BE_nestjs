@@ -1,16 +1,15 @@
-import { IsString } from "class-validator";
-import { Product } from "src/modules/product/entities/product.entity";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { IsString } from 'class-validator';
+import { Product } from 'src/modules/product/entities/product.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Category{
-    @PrimaryGeneratedColumn()
-    id: number
+export class Category {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    name: string
+  @Column()
+  name: string;
 
-    @OneToMany( ()=> Product, (product) => product.category)
-    products: Product[]
-    
+  @OneToMany(() => Product, (product) => product.category)
+  products: Product[];
 }

@@ -8,11 +8,9 @@ import { ClsModule } from 'nestjs-cls';
 import { IsHasProductsValidator } from 'src/validationAndPipes/validation/isDeleteCategory';
 
 @Module({
-     imports: [TypeOrmModule.forFeature([Category, Product]),
-          ClsModule,
-     ],
-     controllers: [CategotyController],
-     providers: [CategotyService, IsHasProductsValidator],
-     exports: [CategotyService],
+  imports: [TypeOrmModule.forFeature([Category, Product]), ClsModule],
+  controllers: [CategotyController],
+  providers: [CategotyService, IsHasProductsValidator],
+  exports: [CategotyService],
 })
-export class CategotyModule { }
+export class CategotyModule {}

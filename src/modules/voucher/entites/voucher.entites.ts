@@ -1,24 +1,23 @@
-import { Order } from "src/modules/order/entities/order.entiy";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Order } from 'src/modules/order/entities/order.entiy';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Voucher{
-    @PrimaryGeneratedColumn()
-    id: number
+export class Voucher {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    code: string
+  @Column()
+  code: string;
 
-    @Column()
-    discount: string
+  @Column()
+  discount: string;
 
-    @Column()
-    expiryDate: Date
+  @Column()
+  expiryDate: Date;
 
-    @Column()
-    stock: number
+  @Column()
+  stock: number;
 
-    @OneToMany( () => Order, (order) => order.voucher)
-    orders: Order[]
-
+  @OneToMany(() => Order, (order) => order.voucher)
+  orders: Order[];
 }

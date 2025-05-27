@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
@@ -9,13 +13,12 @@ import { ClsService } from 'nestjs-cls';
 import { Cart } from '../cart/entities/cart.entity';
 import { BaseService } from '../base/base.service';
 
-
 @Injectable()
 export class UsersService extends BaseService<User> {
-
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectRepository(Order) private readonly orderRepository: Repository<Order>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
     @InjectRepository(Cart) private readonly cartRepository: Repository<Order>,
     private readonly cls: ClsService,
   ) {
@@ -37,7 +40,6 @@ export class UsersService extends BaseService<User> {
     return user;
   }
 
-
   // tim user qua email
   async findUserByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({ where: { email } });
@@ -45,20 +47,23 @@ export class UsersService extends BaseService<User> {
 
   //check xem user cos order khong
   async hasOrders(userId: number): Promise<boolean> {
-    const user = await this.findUserById(userId)
+    const user = await this.findUserById(userId);
     if (!user) {
-      throw new NotFoundException("khong tim thay user")
+      throw new NotFoundException('khong tim thay user');
     }
-    return (await this.orderRepository.findOne({ where: { user } })) ? true : false
+    return (await this.orderRepository.findOne({ where: { user } }))
+      ? true
+      : false;
   }
 
   //check xem user cos cart khong
   async hasCart(userId: number): Promise<boolean> {
-    const user = await this.findUserById(userId)
+    const user = await this.findUserById(userId);
     if (!user) {
-      throw new NotFoundException("khong tim thay user")
+      throw new NotFoundException('khong tim thay user');
     }
-    return (await this.cartRepository.findOne({ where: { user } })) ? true : false
+    return (await this.cartRepository.findOne({ where: { user } }))
+      ? true
+      : false;
   }
-
 }

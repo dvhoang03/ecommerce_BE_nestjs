@@ -1,12 +1,12 @@
-import { IsString } from "class-validator";
+import { IsString } from 'class-validator';
 
 export class PayLoadDTO {
-    @IsString()
-    email: string
+  @IsString()
+  email: string;
 
-    @IsString()
-    role: string
+  @IsString()
+  role: string;
 
-    @IsString()
-    sub: string
+  @IsString()
+  sub: string;
 }

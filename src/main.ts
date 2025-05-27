@@ -7,6 +7,9 @@ import { BadRequestExceptionFilter } from './filters/BadRequestException';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { useContainer } from 'class-validator';
+import { Transport } from '@nestjs/microservices';
+import { KafkaLoggerModule } from './modules/sendLogKafka/KafkafLogger.module';
+import { KafkaLogger } from './modules/sendLogKafka/KafkaLogger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -19,6 +22,10 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
+  // await app.init();
+  const kafkaLogger = app.get(KafkaLogger);
+  app.useLogger(kafkaLogger);
+
   //ap dung validation pipes global
   app.useGlobalPipes(
     new ValidationPipe({
@@ -29,7 +36,6 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalFilters(new BadRequestExceptionFilter());
-
 
   //config swagger
   const config = new DocumentBuilder()
@@ -43,7 +49,7 @@ async function bootstrap() {
         scheme: 'bearer',
         bearerFormat: 'JWT',
       },
-      'access-token',  // Tên của authorization header (có thể đặt là 'access-token' hoặc bất kỳ tên nào)
+      'access-token', // Tên của authorization header (có thể đặt là 'access-token' hoặc bất kỳ tên nào)
     )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
@@ -52,6 +58,6 @@ async function bootstrap() {
     swaggerOptions: { persistAuthorization: true },
   });
 
-  await app.listen(process.env.APP_PORT ?? 3000);
+  await app.listen(process.env.APP_PORT ?? 3001);
 }
 bootstrap();

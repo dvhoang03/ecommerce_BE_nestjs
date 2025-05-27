@@ -1,17 +1,36 @@
-import { Body, Controller, Delete, Get, Param, ParseEnumPipe, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseEnumPipe,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { VoucherService } from './voucher.service';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Voucher } from './entites/voucher.entites';
 import { VoucherDTO } from './dto/voucher.dto';
 import { DeleteVoucherDTO } from './dto/deleteVoucher.dto';
+import { Public } from 'public/jwt-public';
 
 @ApiTags('Voucher')
 @Controller('voucher')
 export class VoucherController {
-  constructor(private readonly voucherService: VoucherService) { };
+  constructor(private readonly voucherService: VoucherService) {}
 
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'create voucher, nếu trùng code hoặc không đúng đinh dang voucher0000 thì sẽ lỗi' })
+  @ApiOperation({
+    summary:
+      'create voucher, nếu trùng code hoặc không đúng đinh dang voucher0000 thì sẽ lỗi',
+  })
   @Post()
   createVoucher(@Body() voucher: VoucherDTO) {
     return this.voucherService.create(voucher);
@@ -24,7 +43,6 @@ export class VoucherController {
     return this.voucherService.findAll();
   }
 
-
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'get detal  voucher' })
   @ApiParam({ name: 'id', description: 'id of voucher', example: 1 })
@@ -32,7 +50,6 @@ export class VoucherController {
   getDetail(@Param('id', ParseIntPipe) id: number) {
     return this.voucherService.findOne(id);
   }
-
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'delete voucher khi chưa ap mã lần nào' })
@@ -42,4 +59,25 @@ export class VoucherController {
     return this.voucherService.delete(request.id);
   }
 
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'delete voucher khi chưa ap mã lần nào' })
+  @ApiParam({
+    name: 'code',
+    description: 'id of voucher',
+    example: 'voucher-0001',
+  })
+  @Get('/code/:code')
+  @Public()
+  layvouchertucode(@Param('code') code: string) {
+    return this.voucherService.findVoucherByCode(code);
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'tru voucher' })
+  @ApiParam({ name: 'id', description: 'id of voucher', example: '1' })
+  @Patch('/subtract/:id')
+  @Public()
+  subtract(@Param('id') id: number) {
+    return this.voucherService.subtractVoucher(id, 1);
+  }
 }

@@ -14,16 +14,35 @@ import { OrderItem } from '../order-item/entities/orderItem.entity';
 import { IsValidQuantityValidator } from 'src/validationAndPipes/validation/isValidQuantity';
 import { IsValidVoucherCodeValidator } from 'src/validationAndPipes/validation/isValidVoucherCode';
 import { IsDeleteOrderValidator } from 'src/validationAndPipes/validation/isDeleteOrder';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, CartItem, Product, OrderItem]),
+  imports: [
+    TypeOrmModule.forFeature([Order, CartItem, Product, OrderItem]),
     OrderItemModule,
     VoucherModule,
     CartItemModule,
     ProductModule,
+
+    // config cho  microservice client
+    ClientsModule.register([
+      {
+        name: 'ORDER_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost', // Tên service hoặc IP
+          port: 4000,
+        },
+      },
+    ]),
   ],
   controllers: [OrderController],
-  providers: [OrderService, IsValidQuantityValidator, IsValidVoucherCodeValidator, IsDeleteOrderValidator],
+  providers: [
+    OrderService,
+    IsValidQuantityValidator,
+    IsValidVoucherCodeValidator,
+    IsDeleteOrderValidator,
+  ],
   exports: [OrderService],
 })
-export class OrderModule { }
+export class OrderModule {}

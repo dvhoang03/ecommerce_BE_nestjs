@@ -1,8 +1,6 @@
-
-import { IsHasOrdersOrCart } from "src/validationAndPipes/validation/isDeleteUser";
+import { IsHasOrdersOrCart } from 'src/validationAndPipes/validation/isDeleteUser';
 
 export class DeleteUserDTO {
-    @IsHasOrdersOrCart()
-    id: number
-
+  @IsHasOrdersOrCart()
+  id: number;
 }

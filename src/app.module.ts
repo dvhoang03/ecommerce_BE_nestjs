@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -22,20 +22,25 @@ import { MinioService } from './modules/minio/minio.service';
 import { MinioModule } from './modules/minio/minio.module';
 import { ClsModule } from 'nestjs-cls';
 import { BaseModule } from './modules/base/base.module';
-import * as moment from 'moment'
+import * as moment from 'moment';
 import { CacheModule } from '@nestjs/cache-manager';
 import { hostname } from 'os';
 import { redisStore } from 'cache-manager-redis-store';
-
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ExcelService } from './modules/excel/excel.service';
+import { ExcelModule } from './modules/excel/excel.module';
+import { KafkaLoggerModule } from './modules/sendLogKafka/KafkafLogger.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(//config file env
+    ConfigModule.forRoot(
+      //config file env
       {
-        isGlobal: true
-      }
+        isGlobal: true,
+      },
     ),
 
+    // /config mysql
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST || 'localhost',
@@ -60,7 +65,7 @@ import { redisStore } from 'cache-manager-redis-store';
       }),
     }),
 
-    //config cls 
+    //config cls
     ClsModule.forRoot({
       middleware: {
         // tu dong gan middleware cho moi tuyen duowng
@@ -70,10 +75,33 @@ import { redisStore } from 'cache-manager-redis-store';
           // console.log('Header x-user-id:', req);
           // console.log('Header x-user-id:', req.headers);
           cls.set('userId', req.headers.authorization);
-        }
-      }
-    }
-    ),
+        },
+      },
+    }),
+
+    // config multer doc file
+    // MulterModule.register({
+    //   storage: diskStorage({
+    //     destination: './uploads',
+    //     filename: (req, file, cb) => {
+    //       const uniqueSufix = Date.now() + '-' + Math.round(Math.random() + 1e9);
+    //       cb(null, `${file.fieldname}-${uniqueSufix}.xlxs`);
+    //     }
+    //   }),
+    //   fileFilter: (req, file, callback) => {
+    //     // Validate định dạng file (chỉ cho phép ảnh)
+    //     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    //     if (!allowedTypes.includes(file.mimetype)) {
+    //       return callback(new Error('Just allow file image (JPG, PNG, GIF)'), false);
+    //     }
+    //     //// Validate kích thước file
+    //     const maxSize = 5 * 1024 * 1024; //5mb
+    //     if (file.size > maxSize) {
+    //       return callback(new Error('Image file over 5mb'), false);
+    //     }
+    //     callback(null, true);
+    //   },
+    // }),
 
     UsersModule,
     AuthModule,
@@ -86,6 +114,8 @@ import { redisStore } from 'cache-manager-redis-store';
     OrderItemModule,
     MinioModule,
     BaseModule,
+    ExcelModule,
+    KafkaLoggerModule,
   ],
 
   controllers: [],
@@ -96,13 +126,13 @@ import { redisStore } from 'cache-manager-redis-store';
     },
     MinioService,
   ],
+  exports: [],
 })
 export class AppModule implements NestModule {
-  constructor(private datasource: DataSource) { };
+  constructor(private datasource: DataSource) {}
 
-  configure(consumer: MiddlewareConsumer) {//config middleware 
-    consumer
-      .apply(LoggerMiddleware)
-      .forRoutes('');
+  configure(consumer: MiddlewareConsumer) {
+    //config middleware
+    consumer.apply(LoggerMiddleware).forRoutes('');
   }
 }

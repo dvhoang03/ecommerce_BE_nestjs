@@ -9,9 +9,13 @@ import { IsCodeVoucherUniqueValidator } from 'src/validationAndPipes/validation/
 import { IsVoucherHasOrderValidator } from 'src/validationAndPipes/validation/isDeleteVoucher';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Voucher, Order]),],
+  imports: [TypeOrmModule.forFeature([Voucher, Order])],
   controllers: [VoucherController],
-  providers: [VoucherService, IsCodeVoucherUniqueValidator, IsVoucherHasOrderValidator],
+  providers: [
+    VoucherService,
+    IsCodeVoucherUniqueValidator,
+    IsVoucherHasOrderValidator,
+  ],
   exports: [VoucherService],
 })
-export class VoucherModule { }
+export class VoucherModule {}

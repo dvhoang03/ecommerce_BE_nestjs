@@ -8,21 +8,27 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class OrderItemService {
-    constructor(
-        @InjectRepository(OrderItem) private orderItemRepository: Repository<OrderItem>
-    ) { }
+  constructor(
+    @InjectRepository(OrderItem)
+    private orderItemRepository: Repository<OrderItem>,
+  ) {}
 
-    async createOrderItem(orderItem: OrderItemDTO, totalPrice: number, product: Product, order: Order): Promise<OrderItem> {
-        const oi = await this.orderItemRepository.create({
-            product,
-            order,
-            totalPrice,
-            ...orderItem
-        })
-        return await this.orderItemRepository.save(oi);
-    }
+  async createOrderItem(
+    orderItem: OrderItemDTO,
+    totalPrice: number,
+    product: Product,
+    order: Order,
+  ): Promise<OrderItem> {
+    const oi = await this.orderItemRepository.create({
+      product,
+      order,
+      totalPrice,
+      ...orderItem,
+    });
+    return await this.orderItemRepository.save(oi);
+  }
 
-    async deleteOrderItemByOrder(order: Order) {
-        return this.orderItemRepository.delete({ order });
-    }
+  async deleteOrderItemByOrder(order: Order) {
+    return this.orderItemRepository.delete({ order });
+  }
 }
