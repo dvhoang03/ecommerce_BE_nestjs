@@ -58,6 +58,6 @@ async function bootstrap() {
     swaggerOptions: { persistAuthorization: true },
   });
 
-  await app.listen(process.env.APP_PORT ?? 3001);
+  await app.listen(process.env.APP_PORT ?? 3000);
 }
 bootstrap();
