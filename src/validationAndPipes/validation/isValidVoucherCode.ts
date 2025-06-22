@@ -6,16 +6,8 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { forEach } from 'lodash';
-import { CartItemService } from 'src/modules/cart-item/cart-item.service';
-import { CreateCartItemDTO } from 'src/modules/cart-item/dto/cartItem.dto';
-import { ProductService } from 'src/modules/product/product.service';
-import { VoucherService } from 'src/modules/voucher/voucher.service';
 
-class ArgumentIsValidQuantity {
-  productId: number;
-  quantity: number;
-}
+import { VoucherService } from 'src/modules/voucher/voucher.service';
 
 @ValidatorConstraint({ async: true })
 @Injectable()

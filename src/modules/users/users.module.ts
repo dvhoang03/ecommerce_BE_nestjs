@@ -23,4 +23,5 @@ import {
   providers: [UsersService, IsEmailUniqueValidator, IsDeleteUserValidator],
   exports: [UsersService],
 })
-export class UsersModule {}
+export class UsersModule { }
+

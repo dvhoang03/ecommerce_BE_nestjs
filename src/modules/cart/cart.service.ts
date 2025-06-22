@@ -19,7 +19,6 @@ export class CartService {
       relations: ['user'],
     });
   }
-
   //tạo cart với id người dùng
   async createCart(userId: number) {
     const user = await this.userRepository.findOne({ where: { id: userId } });

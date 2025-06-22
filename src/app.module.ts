@@ -129,10 +129,13 @@ import { KafkaLoggerModule } from './modules/sendLogKafka/KafkafLogger.module';
   exports: [],
 })
 export class AppModule implements NestModule {
-  constructor(private datasource: DataSource) {}
+  constructor(private datasource: DataSource) { }
 
   configure(consumer: MiddlewareConsumer) {
     //config middleware
     consumer.apply(LoggerMiddleware).forRoutes('');
   }
 }
+
+
+

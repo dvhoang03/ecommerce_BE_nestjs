@@ -25,6 +25,7 @@ import { User } from './entities/user.entity';
 import { DeleteUserDTO } from './dto/deleteUserDto.dto';
 import { BaseController } from '../base/base.controller';
 import { Public } from 'public/jwt-public';
+import { GetUser } from 'src/decorator/user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -42,7 +43,8 @@ export class UsersController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'get all user' })
   @Get()
-  findAll() {
+  findAll(@GetUser() user: any) {
+    console.log("user trong req: ", user);
     return this.usersService.findAll();
   }
 
