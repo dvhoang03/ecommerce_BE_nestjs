@@ -9,12 +9,9 @@ import { ProductModule } from '../product/product.module';
 import { IsValidQuantityValidator } from 'src/validationAndPipes/validation/isValidQuantity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CartItem]),
-    CartModule,
-    ProductModule,
-  ],
+  imports: [TypeOrmModule.forFeature([CartItem]), CartModule, ProductModule],
   controllers: [CartItemController],
   providers: [CartItemService, IsValidQuantityValidator],
   exports: [CartItemService],
 })
-export class CartItemModule { }
+export class CartItemModule {}

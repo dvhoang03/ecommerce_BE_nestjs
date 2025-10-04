@@ -22,18 +22,18 @@ import { MinioService } from './modules/minio/minio.service';
 import { MinioModule } from './modules/minio/minio.module';
 import { ClsModule } from 'nestjs-cls';
 import { BaseModule } from './modules/base/base.module';
-import * as moment from 'moment'
+import * as moment from 'moment';
 import { CacheModule } from '@nestjs/cache-manager';
 import { hostname } from 'os';
 import { redisStore } from 'cache-manager-redis-store';
 
-
 @Module({
   imports: [
-    ConfigModule.forRoot(//config file env
+    ConfigModule.forRoot(
+      //config file .env
       {
-        isGlobal: true
-      }
+        isGlobal: true,
+      },
     ),
 
     TypeOrmModule.forRoot({
@@ -51,7 +51,7 @@ import { redisStore } from 'cache-manager-redis-store';
     // config redis
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async (c) => ({
+      useFactory: (c) => ({
         store: redisStore,
         host: process.env.REDIS_HOST || 'localhost',
         port: Number(process.env.REDIS_PORT) || 6379,
@@ -60,7 +60,7 @@ import { redisStore } from 'cache-manager-redis-store';
       }),
     }),
 
-    //config cls 
+    //config cls
     ClsModule.forRoot({
       middleware: {
         // tu dong gan middleware cho moi tuyen duowng
@@ -70,10 +70,9 @@ import { redisStore } from 'cache-manager-redis-store';
           // console.log('Header x-user-id:', req);
           // console.log('Header x-user-id:', req.headers);
           cls.set('userId', req.headers.authorization);
-        }
-      }
-    }
-    ),
+        },
+      },
+    }),
 
     UsersModule,
     AuthModule,
@@ -98,11 +97,10 @@ import { redisStore } from 'cache-manager-redis-store';
   ],
 })
 export class AppModule implements NestModule {
-  constructor(private datasource: DataSource) { };
+  constructor(private datasource: DataSource) {}
 
-  configure(consumer: MiddlewareConsumer) {//config middleware 
-    consumer
-      .apply(LoggerMiddleware)
-      .forRoutes('');
+  configure(consumer: MiddlewareConsumer) {
+    //config middleware
+    consumer.apply(LoggerMiddleware).forRoutes('');
   }
 }

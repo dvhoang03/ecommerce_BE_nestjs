@@ -1,25 +1,63 @@
 // src/modules/product/product.controller.ts
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseInterceptors, UploadedFiles, UsePipes, ValidationPipe, Query, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UseInterceptors,
+  UploadedFiles,
+  UsePipes,
+  ValidationPipe,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags, ApiConsumes, ApiBody, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiConsumes,
+  ApiBody,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { Product } from './entities/product.entity';
 import { CreateProductDTO } from './dto/createProduct.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { DeleteProductDTO } from './dto/deleteProductSTO.dto';
-import { UpdateProductDTO } from './dto/updateProduct.dto';
 
 @ApiTags('Product')
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   // get all product
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get all products' })
-  @ApiQuery({ name: 'categoryId', description: 'Filter by category ID', required: false })
-  @ApiQuery({ name: 'minPrice', description: 'Filter by min price', required: false })
-  @ApiQuery({ name: 'maxPrice', description: 'Filter by max price', required: false })
-  @ApiQuery({ name: 'search', description: 'Search by keyword', required: false })
+  @ApiQuery({
+    name: 'categoryId',
+    description: 'Filter by category ID',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'minPrice',
+    description: 'Filter by min price',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'maxPrice',
+    description: 'Filter by max price',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'search',
+    description: 'Search by keyword',
+    required: false,
+  })
   @ApiQuery({ name: 'page', description: 'go to page?', required: false })
   @ApiQuery({ name: 'pageSize', description: 'pageSize =?', required: false })
   @Get()
@@ -30,7 +68,6 @@ export class ProductController {
     @Query('search') search?: string,
     @Query('page') page: number = 1,
     @Query('pageSize') pageSize: number = 10,
-
   ): Promise<Product[]> {
     return this.productService.getFilteredProducts(
       categoryId,
@@ -38,11 +75,11 @@ export class ProductController {
       maxPrice,
       search,
       page,
-      pageSize
+      pageSize,
     );
   }
 
-  // find product 
+  // find product
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get product details' })
   @ApiParam({ name: 'id', description: 'ID of the product', example: 1 })
@@ -74,7 +111,7 @@ export class ProductController {
   @ApiConsumes('multipart/form-data')
   async updateProduct(
     @Param('id', ParseIntPipe) id: number,
-    @Body() product: UpdateProductDTO,
+    @Body() product: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Product> {
     console.log('File path:', files);
@@ -83,7 +120,9 @@ export class ProductController {
 
   // delete product
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'xoa product, khong the xoa neu có orderitem hoạc cartitem' })
+  @ApiOperation({
+    summary: 'xoa product, khong the xoa neu có orderitem hoạc cartitem',
+  })
   @ApiParam({ name: 'id', description: 'ID of the product', example: 1 })
   @Delete(':id')
   async deleteProduct(@Param() request: DeleteProductDTO): Promise<boolean> {

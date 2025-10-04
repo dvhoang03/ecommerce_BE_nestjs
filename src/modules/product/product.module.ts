@@ -46,4 +46,4 @@ import { OrderItem } from '../order-item/entities/orderItem.entity';
   providers: [ProductService, IsHasOrderItemOrCartItemValidator],
   exports: [ProductService],
 })
-export class ProductModule { }
+export class ProductModule {}

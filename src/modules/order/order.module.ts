@@ -16,14 +16,20 @@ import { IsValidVoucherCodeValidator } from 'src/validationAndPipes/validation/i
 import { IsDeleteOrderValidator } from 'src/validationAndPipes/validation/isDeleteOrder';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, CartItem, Product, OrderItem]),
+  imports: [
+    TypeOrmModule.forFeature([Order, CartItem, Product, OrderItem]),
     OrderItemModule,
     VoucherModule,
     CartItemModule,
     ProductModule,
   ],
   controllers: [OrderController],
-  providers: [OrderService, IsValidQuantityValidator, IsValidVoucherCodeValidator, IsDeleteOrderValidator],
+  providers: [
+    OrderService,
+    IsValidQuantityValidator,
+    IsValidVoucherCodeValidator,
+    IsDeleteOrderValidator,
+  ],
   exports: [OrderService],
 })
-export class OrderModule { }
+export class OrderModule {}

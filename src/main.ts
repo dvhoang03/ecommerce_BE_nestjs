@@ -30,7 +30,6 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalFilters(new BadRequestExceptionFilter());
 
-
   //config swagger
   const config = new DocumentBuilder()
     .setTitle('Ecommerce')
@@ -43,7 +42,7 @@ async function bootstrap() {
         scheme: 'bearer',
         bearerFormat: 'JWT',
       },
-      'access-token',  // Tên của authorization header (có thể đặt là 'access-token' hoặc bất kỳ tên nào)
+      'access-token', // Tên của authorization header (có thể đặt là 'access-token' hoặc bất kỳ tên nào)
     )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
